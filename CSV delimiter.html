@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CSV Delimiter Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    h2 {
+      text-align: centre;
+    }
+
+    input[type="file"] {
+      margin: 10px 0;
+    }
+
+    #status {
+      margin-top: 20px;
+      colour: green;
+    }
+  </style>
+</head>
+<body>
+  <h2>CSV Delimiter Checker & Converter</h2>
+  <input type="file" id="csvFile" accept=".csv" />
+  <br>
+  <button id="submitButton">Check and Convert</button>
+  <p id="status"></p>
+
+  <script>
+    function processCSV() {
+      const fileInput = document.getElementById('csvFile');
+      const file = fileInput.files[0];
+      const status = document.getElementById('status');
+
+      if (!file) {
+        status.textContent = 'Please select a CSV file.';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.addEventListener('load', function (e) {
+        const text = e.target.result;
+
+        // Check the first 10 lines for delimiter frequency
+        const lines = text.split(/\r?\n/).slice(0, 10);
+        let commaCount = 0, semicolonCount = 0;
+
+        lines.forEach(line => {
+          commaCount += (line.match(/,/g) || []).length;
+          semicolonCount += (line.match(/;/g) || []).length;
+        });
+
+        let newText = text;
+        let delimiterType;
+
+        if (semicolonCount > commaCount) {
+          delimiterType = 'semicolon';
+          newText = text.replace(/;/g, ',');
+        } else {
+          delimiterType = 'comma';
+        }
+
+        // Provide feedback
+        status.textContent = `Detected a ${delimiterType}-separated CSV. ` +
+          (delimiterType === 'semicolon' ? 'Converted to comma-separated.' : 'No conversion needed.');
+
+        // Prepare file for download
+
+        const blob = new Blob([newText], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'converted.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+
+      reader.readAsText(file);
+    }
+
+    const button = document.getElementById('submitButton');
+    button.addEventListener('click', processCSV);
+  </script>
+</body>
+</html>
